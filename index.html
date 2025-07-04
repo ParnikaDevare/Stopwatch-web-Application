@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parnika's Stopwatch</s> Stopwatch</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { height: 100vh; background: linear-gradient(135deg, #460b42, #d484ca); display: flex; justify-content: center; align-items: center; font-family: Arial, sans-serif; color: white; transition: background 0.5s; }
+        .container { text-align: center; }
+        .circle { width: 250px; height: 250px; border-radius: 50%; background: conic-gradient(#00f260, #0575e6); display: flex; justify-content: center; align-items: center; margin: 20px auto; box-shadow: 0 0 30px rgba(0,255,255,0.5); transition: background 0.5s; }
+        .time-display { font-size: 2rem; background: rgba(0,0,0,0.3); padding: 10px 20px; border-radius: 10px; backdrop-filter: blur(5px); }
+        .buttons button { margin: 10px; padding: 10px 20px; font-size: 1rem; border: none; border-radius: 5px; cursor: pointer; transition: transform 0.2s, background 0.3s; }
+        .buttons button:hover { transform: scale(1.05); }
+        .start { background: #28a745; color: white; }
+        .pause { background: #ffc107; color: black; }
+        .reset { background: #dc3545; color: white; }
+        .lap-list { margin-top: 20px; max-height: 150px; overflow-y: auto; text-align: left; background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; }
+        .lap-item { margin: 5px 0; padding: 5px; background: rgba(0,0,0,0.2); border-radius: 5px; }
+        .theme-toggle { margin-top: 15px; padding: 5px 15px; border: none; border-radius: 5px; cursor: pointer; background: #17a2b8; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Parnika's Stopwatch</h1>
+        <div class="circle" id="circle">
+            <div class="time-display" id="display">00:00:00.000</div>
+        </div>
+        <div class="buttons">
+            <button class="start" id="startBtn">Start</button>
+            <button class="pause" id="pauseBtn">Pause</button>
+            <button class="reset" id="resetBtn">Reset</button>
+            <button class="start" id="lapBtn">Lap</button>
+        </div>
+        <div class="lap-list" id="lapList"></div>
+        <button class="theme-toggle" id="themeToggle">Toggle Theme</button>
+        <button class="theme-toggle" id="exportBtn">Export Laps</button>
+    </div>
+
+    <script>
+        let [milliseconds, seconds, minutes, hours] = [0, 0, 0, 0];
+        let display = document.getElementById("display");
+        let timer = null;
+        const circle = document.getElementById("circle");
+        const lapList = document.getElementById("lapList");
+        const themeToggle = document.getElementById("themeToggle");
+        const exportBtn = document.getElementById("exportBtn");
+
+        document.getElementById("startBtn").addEventListener("click", start);
+        document.getElementById("pauseBtn").addEventListener("click", pause);
+        document.getElementById("resetBtn").addEventListener("click", reset);
+        document.getElementById("lapBtn").addEventListener("click", recordLap);
+        themeToggle.addEventListener("click", toggleTheme);
+        exportBtn.addEventListener("click", exportLaps);
+
+        function start() {
+            if (timer !== null) clearInterval(timer);
+            timer = setInterval(updateTime, 10);
+            circle.style.background = "conic-gradient(#00f260, #0575e6, #00f260)";
+            playBeep();
+        }
+
+        function pause() {
+            clearInterval(timer);
+            circle.style.background = "conic-gradient(#ffafbd, #ffc3a0)";
+            playBeep();
+        }
+
+        function reset() {
+            clearInterval(timer);
+            [milliseconds, seconds, minutes, hours] = [0, 0, 0, 0];
+            display.innerHTML = "00:00:00.000";
+            lapList.innerHTML = "";
+            circle.style.background = "conic-gradient(#00f260, #0575e6)";
+            playBeep();
+        }
+
+        function updateTime() {
+            milliseconds += 10;
+            if (milliseconds === 1000) {
+                milliseconds = 0;
+                seconds++;
+                if (seconds === 60) {
+                    seconds = 0;
+                    minutes++;
+                    if (minutes === 60) {
+                        minutes = 0;
+                        hours++;
+                    }
+                }
+            }
+            let h = hours < 10 ? "0" + hours : hours;
+            let m = minutes < 10 ? "0" + minutes : minutes;
+            let s = seconds < 10 ? "0" + seconds : seconds;
+            let ms = milliseconds < 100 ? "0" + (milliseconds < 10 ? "0" + milliseconds : milliseconds) : milliseconds;
+            display.innerHTML = `${h}:${m}:${s}.${ms}`;
+        }
+
+        function recordLap() {
+            let time = display.innerHTML;
+            let lapItem = document.createElement("div");
+            lapItem.className = "lap-item";
+            lapItem.innerText = "Lap: " + time;
+            lapList.appendChild(lapItem);
+            playBeep();
+        }
+
+        function toggleTheme() {
+            if (document.body.style.background.includes("#1e3c72")) {
+                document.body.style.background = "linear-gradient(135deg, #000000, #434343)";
+            } else {
+                document.body.style.background = "linear-gradient(135deg, #1e3c72, #2a5298)";
+            }
+        }
+
+        function exportLaps() {
+            let text = "Laps:\n";
+            document.querySelectorAll(".lap-item").forEach((item, index) => {
+                text += `${index + 1}. ${item.innerText}\n`;
+            });
+            const blob = new Blob([text], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "lap_times.txt";
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function playBeep() {
+            const beep = new Audio("C:\Users\Parnika Devare\Downloads\PRODIGY_WD_02\mixkit-positive-interface-beep-221.wav");
+            beep.play();
+        }
+    </script>
+</body>
+</html>
